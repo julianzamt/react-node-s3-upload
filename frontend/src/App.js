@@ -7,8 +7,8 @@ import axios from "axios";
 import "./App.css";
 
 function App() {
-  const [file, setFile] = useState();
-  const [description, setDescription] = useState("");
+  const [files, setFiles] = useState();
+  // const [description, setDescription] = useState("");
   const [feedback, setFeedback] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageList, setImageList] = useState([]);
@@ -16,7 +16,7 @@ function App() {
   async function fetchData() {
     try {
       const res = await axios.get("http://localhost:5000/images");
-      console.log(res.data);
+      console.log(res.data + " Lo que hay en Mongo");
       setImageList(
         res.data.map((item) => (
           <ImageList
@@ -40,10 +40,11 @@ function App() {
     try {
       setFeedback("");
       setIsLoading(true);
-      const result = await postImage({ image: file, description });
+      //const result = await postImage({ image: files, description });
+      const result = await postImage({ images: files });
       console.log(result);
       setIsLoading(false);
-      setFeedback("Image successfully uploaded.");
+      setFeedback("Images successfully uploaded.");
       fetchData();
     } catch (e) {
       console.log(e.message + " error en react");
@@ -52,20 +53,20 @@ function App() {
     }
   };
 
-  const fileSelected = (event) => {
-    const file = event.target.files[0];
-    setFile(file);
+  const filesSelected = (event) => {
+    setFiles(event.target.files);
   };
 
   return (
     <div className="App">
       <form onSubmit={submit}>
-        <input onChange={fileSelected} type="file" accept="image/*"></input>
         <input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          type="text"
+          onChange={filesSelected}
+          type="file"
+          accept="image/*"
+          multiple
         ></input>
+
         {isLoading ? (
           <Spinner animation="grow" />
         ) : (

@@ -8,7 +8,7 @@ const { getAll, create, getById } = require("../controllers/imageController");
 // route to respond to img tags
 router.get("/:key", getById);
 // upload to server with middleware, then upload to s3
-router.post("/", upload.single("image"), create);
+router.post("/", upload.array("images"), create);
 // get images list
 router.get("/", getAll);
 
