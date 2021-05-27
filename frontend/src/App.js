@@ -1,51 +1,81 @@
-import { useState } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from "react";
+import Spinner from "react-bootstrap/Spinner";
+import postImage from "./utils/postImage";
+import ImageList from "./components/ImageList";
+import axios from "axios";
 
-import './App.css'
-
-async function postImage({image, description}) {
-  const formData = new FormData();
-  formData.append("image", image)
-  formData.append("description", description)
-
-  const result = await axios.post('/images', formData, { headers: {'Content-Type': 'multipart/form-data'}})
-  return result.data
-}
-
+import "./App.css";
 
 function App() {
+  const [file, setFile] = useState();
+  const [description, setDescription] = useState("");
+  const [feedback, setFeedback] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [imageList, setImageList] = useState([]);
 
-  const [file, setFile] = useState()
-  const [description, setDescription] = useState("")
-  const [images, setImages] = useState([])
-
-  const submit = async event => {
-    event.preventDefault()
-    const result = await postImage({image: file, description})
-    setImages([result.image, ...images])
+  async function fetchData() {
+    try {
+      const res = await axios.get("http://localhost:5000/images");
+      console.log(res.data);
+      setImageList(
+        res.data.map((item) => (
+          <ImageList
+            originalName={item.originalName}
+            path={item.path}
+            key={item.path}
+          />
+        ))
+      );
+    } catch (e) {
+      console.log(e + " Fetch de React");
+    }
   }
 
-  const fileSelected = event => {
-    const file = event.target.files[0]
-		setFile(file)
-	}
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    try {
+      setFeedback("");
+      setIsLoading(true);
+      const result = await postImage({ image: file, description });
+      console.log(result);
+      setIsLoading(false);
+      setFeedback("Image successfully uploaded.");
+      fetchData();
+    } catch (e) {
+      console.log(e.message + " error en react");
+      setFeedback("Upload failed. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
+  const fileSelected = (event) => {
+    const file = event.target.files[0];
+    setFile(file);
+  };
 
   return (
     <div className="App">
       <form onSubmit={submit}>
         <input onChange={fileSelected} type="file" accept="image/*"></input>
-        <input value={description} onChange={e => setDescription(e.target.value)} type="text"></input>
-        <button type="submit">Submit</button>
+        <input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          type="text"
+        ></input>
+        {isLoading ? (
+          <Spinner animation="grow" />
+        ) : (
+          <button type="submit">Submit</button>
+        )}
       </form>
-
-      { images.map( image => (
-        <div key={image}>
-          <img src={image}></img>
-        </div>
-      ))}
-
-      <img src="/images/9fa06d3c5da7aec7f932beb5b3e60f1d"></img>
-
+      {feedback ? <div>{feedback}</div> : null}
+      <div style={{ border: "1px solid black", margin: "1em", padding: "1em" }}>
+        {imageList}
+      </div>
     </div>
   );
 }
