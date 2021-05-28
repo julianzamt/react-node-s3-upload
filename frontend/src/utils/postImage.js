@@ -9,7 +9,6 @@ async function postImage({ images }) {
 
   for (var value of formData.values()) {
     console.log(value);
-    console.log("culo");
   }
 
   const result = await axios.post("http://localhost:5000/images", formData, {

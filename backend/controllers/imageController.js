@@ -7,7 +7,7 @@ const unlinkFile = util.promisify(fs.unlink);
 module.exports = {
   getAll: async function (req, res, next) {
     try {
-      const images = await imageModel.find();
+      const images = await imageModel.find(queryFind);
       res.status(200).json(images);
     } catch (e) {
       e.status = 400;
@@ -32,6 +32,8 @@ module.exports = {
         const document = new imageModel({
           path: file.filename,
           originalName: file.originalName,
+          category: file.body.category,
+          isCover: file.body.isCover,
         });
         response = await document.save();
         // Erase from server
@@ -43,6 +45,15 @@ module.exports = {
       }
     }
     res.json("succesfully uploaded");
+  },
+  getImagesNames: async function () {
+    try {
+      const imagesNames = await imageModel.find().select("originalName");
+      res.status(200).json(imagesNames);
+    } catch (e) {
+      e.status = 400;
+      console.log(e.message);
+    }
   },
   update: function () {},
   delete: function () {},

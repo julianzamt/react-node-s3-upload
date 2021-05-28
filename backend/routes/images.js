@@ -3,13 +3,18 @@ const router = express.Router();
 
 var multer = require("multer");
 var upload = multer({ dest: "uploads/" });
-const { getAll, create, getById } = require("../controllers/imageController");
+const {
+  getAll,
+  create,
+  getById,
+  getImagesNames,
+} = require("../controllers/imageController");
 
 // route to respond to img tags
 router.get("/:key", getById);
 // upload to server with middleware, then upload to s3
 router.post("/", upload.array("images"), create);
-// get images list
 router.get("/", getAll);
+router.get("/names", getImagesNames);
 
 module.exports = router;
