@@ -1,12 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 
-const imagesRouter = require("./routes/images");
+const obrasRouter = require("./routes/obras");
 
 const app = express();
 
 app.use(cors());
 
-app.use("/images", imagesRouter);
+app.use("/obras", obrasRouter);
 
 app.listen(5000, () => console.log("listening on port 5000"));

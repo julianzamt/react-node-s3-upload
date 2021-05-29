@@ -15,9 +15,9 @@ async function fetchImages(query) {
   }
 }
 
-async function fetchData(query) {
+async function fetchData(entity) {
   try {
-    const res = await axios.get(`http://localhost:5000/images/${query}`);
+    const res = await axios.get(`http://localhost:5000/${entity}`);
     return res;
   } catch (e) {
     console.log(e.message);

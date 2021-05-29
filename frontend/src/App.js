@@ -1,4 +1,4 @@
-import BackOffice from "./pages/BackOffice";
+import Admin from "./pages/Admin";
 import Home from "./pages/Home";
 import Proyectos from "./pages/Proyectos";
 import Obras from "./pages/Obras";
@@ -13,7 +13,7 @@ function App() {
       <Header />
       <Switch>
         <Route exact path="/" component={Home} />
-        <Route exact path="/admin" component={BackOffice} />
+        <Route exact path="/admin" component={Admin} />
         <Route exact path="/obras" component={Obras} />
         <Route exact path="/proyectos" component={Proyectos} />
       </Switch>
