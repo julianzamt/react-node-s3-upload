@@ -14,7 +14,17 @@ module.exports = {
       console.log(e.message);
     }
   },
-  getById: (req, res) => {
+  getById: async function (req, res, next) {
+    try {
+      const obra = await obraModel.findById(req.params.id);
+      res.status(200).json(obra);
+    } catch (e) {
+      e.status = 400;
+      console.log(e.message);
+      res.status(400).send(e);
+    }
+  },
+  getImageByKey: (req, res) => {
     const key = req.params.key;
     const readStream = getFileStream(key);
     readStream.pipe(res);
@@ -22,19 +32,24 @@ module.exports = {
   create: async function (req, res, next) {
     const cover = req.files["cover"][0];
     const images = req.files["images"];
-    let coverArrayForMongo = [
-      {
-        s3name: cover.filename,
-        originalName: cover.originalname,
-      },
-    ];
+    let coverArrayForMongo = [];
     let imagesArrayForMongo = [];
-    for (let image of images) {
-      const imageForMongo = {
-        s3name: image.filename,
-        originalName: image.originalname,
-      };
-      imagesArrayForMongo.push(imageForMongo);
+    if (cover) {
+      coverArrayForMongo = [
+        {
+          path: cover.filename,
+          originalName: cover.originalname,
+        },
+      ];
+    }
+    if (images) {
+      for (let image of images) {
+        const imageForMongo = {
+          path: image.filename,
+          originalName: image.originalname,
+        };
+        imagesArrayForMongo.push(imageForMongo);
+      }
     }
 
     let newObraId = "";
@@ -55,12 +70,16 @@ module.exports = {
       newObraId = newObra._id;
 
       //upload images to s3, then erase from server
-      await uploadFile(cover);
-      await unlinkFile(cover.path);
+      if (cover) {
+        await uploadFile(cover);
+        await unlinkFile(cover.path);
+      }
 
-      for (let image of images) {
-        await uploadFile(image);
-        await unlinkFile(image.path);
+      if (images) {
+        for (let image of images) {
+          await uploadFile(image);
+          await unlinkFile(image.path);
+        }
       }
 
       res.status(200).json(newObra);
@@ -69,10 +88,14 @@ module.exports = {
         // erase document
         await obraModel.deleteOne({ _id: newObraId });
         // erase uploaded files
-        for (image of images) {
-          await deleteFile(image.filename);
+        if (images) {
+          for (image of images) {
+            await deleteFile(image.filename);
+          }
         }
-        await deleteFile(cover.filename);
+        if (cover) {
+          await deleteFile(cover.filename);
+        }
       } catch (e) {
         console.log(e);
       }

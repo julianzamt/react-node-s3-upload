@@ -2,7 +2,7 @@ const mongoose = require("../bin/mongodb");
 const errorMessages = require("../utils/errorMessages");
 
 const ImageSchema = new mongoose.Schema({
-  s3name: {
+  path: {
     type: String,
     required: [true, errorMessages.GENERAL.required],
   },
