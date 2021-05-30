@@ -18,4 +18,6 @@ router.post(
   create
 );
 
+router.delete("/:id", deleteById);
+
 module.exports = router;
