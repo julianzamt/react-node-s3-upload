@@ -1,0 +1,16 @@
+.cover__container {
+  position: relative;
+  text-align: center;
+}
+
+.cover__image {
+  width: 100%;
+}
+
+.cover__text {
+  position: absolute;
+  font-size: 3em;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}

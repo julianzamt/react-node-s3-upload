@@ -11,14 +11,10 @@ async function postData({ title, subtitle, year, text, cover, images }) {
     formData.append("images", images[i]);
   }
 
-  for (var value of formData.values()) {
-    console.log(value);
-  }
-
   const result = await axios.post("http://localhost:5000/obras", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return result.data;
+  return result;
 }
 
 export default postData;

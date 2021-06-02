@@ -33,4 +33,4 @@ async function fetchImagesNames() {
   }
 }
 
-export { fetchImages, fetchData, fetchImagesNames };
+export { fetchData, fetchImagesNames };
