@@ -1,24 +1,21 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { fetchData } from "../services/services";
 import "./Obras.css";
 import Cover from "../components/Cover";
 
 const Obras = () => {
-  const [obras, setObras] = useState([]);
+  const [covers, setCovers] = useState([]);
 
-  async function fetchData() {
+  async function fetchCovers() {
     try {
-      const res = await axios.get(`http://localhost:5000/obras`);
-      setObras(
-        res.data.map((obra) => {
-          return (
-            <Cover
-              path={obra.cover[0].path}
-              title={obra.title}
-              key={obra._id}
-              id={obra._id}
-            />
-          );
+      const obras = await fetchData("obras");
+      setCovers(
+        obras.data.map(obra => {
+          if (obra.cover[0]) {
+            return <Cover path={obra.cover[0].path} title={obra.title} key={obra._id} id={obra._id} />;
+          } else {
+            return <Cover path={null} title={obra.title} key={obra._id} id={obra._id} />;
+          }
         })
       );
     } catch (e) {
@@ -27,12 +24,12 @@ const Obras = () => {
   }
 
   useEffect(() => {
-    fetchData();
+    fetchCovers();
   }, []);
 
   return (
     <div>
-      <div>{obras}</div>
+      <div>{covers}</div>
     </div>
   );
 };

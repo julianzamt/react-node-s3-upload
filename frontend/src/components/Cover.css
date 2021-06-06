@@ -1,6 +1,7 @@
 .cover__container {
   position: relative;
   text-align: center;
+  width: 50vw;
 }
 
 .cover__image {

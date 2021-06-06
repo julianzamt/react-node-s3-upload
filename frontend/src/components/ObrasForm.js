@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import Spinner from "react-bootstrap/Spinner";
-import postData from "../utils/postData";
-import { fetchData } from "../utils/fetchData";
+import { postData, fetchData, deleteImage, updateData, deleteData } from "../services/services";
+import Form from "react-bootstrap/Form";
+import Image from "react-bootstrap/Image";
+import Button from "react-bootstrap/Button";
+import { errorMessages } from "../utils/errorMessages";
+import "./ObrasForm.css";
 
 const ObrasForm = () => {
   const [form, setForm] = useState("");
   const [feedback, setFeedback] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [obras, setObras] = useState("");
   const [obra, setObra] = useState("");
@@ -14,60 +19,137 @@ const ObrasForm = () => {
   const [year, setYear] = useState("");
   const [text, setText] = useState("");
   const [images, setImages] = useState("");
-  const [cover, setCover] = useState(false);
+  const [imagesToUpload, setImagesToUpload] = useState("");
+  const [cover, setCover] = useState("");
+  const [coverToUpload, setCoverToUpload] = useState("");
 
-  async function populateObras() {
+  async function fetchObras() {
     const res = await fetchData("obras");
-    setObras(res.data.map((item) => item));
+    setObras(res.data.map(item => item));
+  }
+
+  function resetFields() {
+    setTitle("");
+    setSubtitle("");
+    setYear("");
+    setText("");
+    setImagesToUpload("");
+    setCoverToUpload("");
+    setObra("");
+    setFeedback("");
+    setSuccess(false);
   }
 
   useEffect(() => {
-    populateObras();
+    fetchObras();
   }, []);
 
-  const handleSubmit = async (event) => {
+  useEffect(() => {
+    if (obra) {
+      setTitle(obra.title);
+      setSubtitle(obra.subtitle);
+      setYear(obra.year);
+      setText(obra.text);
+      setImages(obra.images);
+      setCover(obra.cover[0]);
+    }
+  }, [obra]);
+
+  const handleSubmit = async event => {
     event.preventDefault();
+    console.log(event.target);
     const action = event.target.id;
-    console.log(action);
+    setFeedback("");
+    setIsLoading(true);
     if (action === "create") {
       try {
-        setFeedback("");
-        setIsLoading(true);
-        const res = await postData({
-          title,
-          subtitle,
-          year,
-          text,
-          cover,
-          images,
-        });
-        console.log(res.data);
-        setIsLoading(false);
+        const res = await postData({ title, subtitle, year, text, coverToUpload, imagesToUpload });
         if (res.status === 200) {
-          setFeedback("Images successfully uploaded.");
+          fetchObras();
+          setFeedback("Nueva obra creada con éxito");
+          setIsLoading(false);
+          setSuccess(true);
+          setForm("");
         } else {
-          setFeedback(
-            "Something went wrong. Please try again (Seguramente algo con unique. TODO devolver ese error bien"
-          );
+          setFeedback(errorMessages.ERROR);
+          setIsLoading(false);
         }
       } catch (e) {
-        console.log(e.message + " error en react");
-        setFeedback("Something went wrong. Please try again.");
+        console.log(e);
+        setFeedback(errorMessages.ERROR);
+        setIsLoading(false);
+      }
+    } else if (action === "update") {
+      const obraId = obra._id;
+      try {
+        const res = await updateData({ title, subtitle, year, text, coverToUpload, imagesToUpload, obraId });
+        if (res.status === 200) {
+          fetchObras();
+          setObra(res.data);
+          setImagesToUpload("");
+          setCoverToUpload("");
+          setFeedback("Obra actualizada con éxito");
+          setIsLoading(false);
+        } else {
+          setFeedback(errorMessages.ERROR);
+          setIsLoading(false);
+        }
+      } catch (e) {
+        console.log(e);
+        setFeedback(errorMessages.ERROR);
+        setIsLoading(false);
+      }
+    } else if (action === "deleteImage" || action === "deleteCover") {
+      let coverFlag = false;
+      const key = event.target.value;
+      const imageId = event.target.name;
+      if (action === "deleteCover") coverFlag = true;
+      try {
+        const res = await deleteImage("obras", obra._id, imageId, key, coverFlag);
+        setIsLoading(false);
+        if (res.status === 200) {
+          setObra(res.data);
+          setFeedback("Imagen borrada con éxito");
+        } else {
+          console.log(res);
+          setFeedback(errorMessages.ERROR);
+        }
+      } catch (e) {
+        console.log(e);
+        setFeedback(errorMessages.ERROR);
+        setIsLoading(false);
+      }
+    } else if (action === "delete") {
+      const id = event.target.value;
+      try {
+        const deleteStatus = await deleteData("obras", id);
+        console.log(deleteStatus);
+        if (deleteStatus.status === 200) {
+          fetchObras();
+          setFeedback("La obra fue borrada con éxito.");
+          setSuccess(true);
+          setForm("");
+          setIsLoading(false);
+        }
+      } catch (e) {
+        console.log(e);
+        setFeedback(errorMessages.ERROR);
         setIsLoading(false);
       }
     }
   };
 
-  const handleClick = async (event) => {
+  const handleClick = async event => {
+    resetFields();
     setForm(event.target.id);
   };
 
-  const handleChange = (event) => {
+  const handleChange = event => {
     const name = event.target.name;
     if (name === "images") {
-      setImages(event.target.files);
+      setImagesToUpload(event.target.files);
     } else if (name === "cover") {
-      setCover(event.target.files[0]);
+      setCoverToUpload(event.target.files[0]);
     } else if (name === "title") {
       setTitle(event.target.value);
     } else if (name === "subtitle") {
@@ -78,8 +160,7 @@ const ObrasForm = () => {
       setText(event.target.value);
     } else if (name === "obra") {
       setObra(
-        obras.find((item) => {
-          console.log(item);
+        obras.find(item => {
           return item["_id"] === event.target.value;
         })
       );
@@ -98,147 +179,108 @@ const ObrasForm = () => {
 
       {/* CREATE */}
       {form === "createForm" && (
-        <form onSubmit={handleSubmit} id="create">
-          <label htmlFor="title">Nombre corto para portada: </label>
-          <input
-            type="text"
-            required
-            name="title"
-            value={title}
-            onChange={handleChange}
-            placeholder="Nombre corto"
-          />
-          <label htmlFor="subtitle">Nombre largo para texto interior: </label>
-          <input
-            type="text"
-            required
-            name="subtitle"
-            value={subtitle}
-            onChange={handleChange}
-            placeholder="Nombre largo"
-          />
-          <label htmlFor="year">Año: </label>
-          <input
-            type="text"
-            required
-            name="year"
-            value={year}
-            onChange={handleChange}
-            placeholder="Año"
-          />
-          <label htmlFor="text">Texto interior: </label>
-          <textarea
-            required
-            name="text"
-            value={text}
-            onChange={handleChange}
-            placeholder="Texto interior"
-          />
-          <label htmlFor="cover">Imagen de portada: </label>
-          <input
-            onChange={handleChange}
-            type="file"
-            accept="image/*"
-            name="cover"
-          ></input>
-          <label htmlFor="images">Imágenes interiores: </label>
-          <input
-            onChange={handleChange}
-            type="file"
-            accept="image/*"
-            name="images"
-            multiple
-          ></input>
+        <Form onSubmit={handleSubmit} id="create">
+          <Form.Group>
+            <Form.Label htmlFor="title">Nombre corto para portada: </Form.Label>
+            <Form.Control type="text" required name="title" value={title} onChange={handleChange} placeholder="Nombre corto" />
+            <Form.Label htmlFor="subtitle">Nombre largo para texto interior: </Form.Label>
+            <Form.Control type="text" required name="subtitle" value={subtitle} onChange={handleChange} placeholder="Nombre largo" />
+            <Form.Label htmlFor="year">Año: </Form.Label>
+            <Form.Control type="number" required name="year" value={year} onChange={handleChange} placeholder="Año" />
+            <Form.Label htmlFor="text">Texto interior: </Form.Label>
+            <Form.Control as="textarea" required name="text" value={text} onChange={handleChange} placeholder="Texto interior" />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label htmlFor="cover">Imagen de portada: </Form.Label>
+            <Form.File onChange={handleChange} accept="image/*" name="cover" />
+            <Form.Label htmlFor="images">Imágenes interiores: </Form.Label>
+            <Form.File onChange={handleChange} accept="image/*" name="images" multiple />
+          </Form.Group>
 
-          {isLoading ? (
-            <Spinner animation="grow" />
-          ) : (
-            <button type="submit">Submit</button>
-          )}
-          {feedback ? <div>{feedback}</div> : null}
-        </form>
+          {isLoading ? <Spinner animation="grow" /> : <button type="submit">Crear nueva obra</button>}
+          {feedback && <div>{feedback}</div>}
+        </Form>
       )}
 
       {/* EDIT */}
       {form === "editForm" && (
-        <div>
-          <label htmlFor={obra}>Selecciona la obra</label>
-          <select onChange={handleChange} name="obra" id="obra" value={obra}>
+        <Form>
+          <Form.Label htmlFor="obra">Selecciona la obra</Form.Label>
+          <Form.Control as="select" onChange={handleChange} name="obra" id="obra">
             <option value="">---</option>
-            {obras
-              ? obras.map((item) => (
-                  <option value={item._id} key={item._id}>
-                    {item.title}
-                  </option>
-                ))
-              : null}
-          </select>
-        </div>
+            {obras &&
+              obras.map(item => (
+                <option value={item._id} key={item._id}>
+                  {item.title}
+                </option>
+              ))}
+          </Form.Control>
+        </Form>
       )}
-      {obra ? (
-        <form onSubmit={handleSubmit} id="create">
-          <label htmlFor="title">Nombre corto para portada: </label>
-          <input
-            type="text"
-            required
-            name="title"
-            value={title}
-            onChange={handleChange}
-            placeholder="Nombre corto"
-          />
-          <label htmlFor="subtitle">Nombre largo para texto interior: </label>
-          <input
-            type="text"
-            required
-            name="subtitle"
-            value={subtitle}
-            onChange={handleChange}
-            placeholder="Nombre largo"
-          />
-          <label htmlFor="year">Año: </label>
-          <input
-            type="text"
-            required
-            name="year"
-            value={year}
-            onChange={handleChange}
-            placeholder="Año"
-          />
-          <label htmlFor="text">Texto interior: </label>
-          <textarea
-            required
-            name="text"
-            value={text}
-            onChange={handleChange}
-            placeholder="Texto interior"
-          />
-          <label htmlFor="cover">Imagen de portada: </label>
-          <input
-            onChange={handleChange}
-            type="file"
-            accept="image/*"
-            name="cover"
-          ></input>
-          <label htmlFor="images">Imágenes interiores: </label>
-          <input
-            onChange={handleChange}
-            type="file"
-            accept="image/*"
-            name="images"
-            multiple
-          ></input>
+      {form === "editForm" && obra && (
+        <Form onSubmit={handleSubmit} id="update">
+          <Form.Group>
+            <Form.Label htmlFor="title">Nombre corto para portada: </Form.Label>
+            <Form.Control type="text" required name="title" value={title} onChange={handleChange} placeholder="Nombre corto" />
+            <label htmlFor="subtitle">Nombre largo para texto interior: </label>
+            <Form.Control type="text" required name="subtitle" value={subtitle} onChange={handleChange} placeholder="Nombre largo" />
+            <label htmlFor="year">Año: </label>
+            <Form.Control type="text" required name="year" value={year} onChange={handleChange} placeholder="Año" />
+            <label htmlFor="text">Texto interior: </label>
+            <Form.Control as="textarea" required name="text" value={text} onChange={handleChange} placeholder="Texto interior" />
+          </Form.Group>
+          <Form.Group>
+            <p>Portada actual: </p>
+            {cover ? (
+              <div className="obrasForm__thumbnail-container">
+                <span>{cover.originalName}</span>
+                <Image className="obrasForm__thumbnail" src={`http://localhost:5000/obras/images/${cover.path}`} alt="cover" thumbnail />
+                <Button className="ml-4" variant="outline-danger" onClick={handleSubmit} id="deleteCover" name={cover._id} value={cover.path}>
+                  X
+                </Button>
+              </div>
+            ) : (
+              <p>No se ha seleccionado portada aún</p>
+            )}
+            <Form.Label htmlFor="cover">Seleccione nueva portada: </Form.Label>
+            <Form.File onChange={handleChange} accept="image/*" name="cover" disabled={cover ? true : false} />
+          </Form.Group>
+          <Form.Group>
+            <p>Imágenes interiores actuales:</p>
+            {images.length ? (
+              images.map(img => (
+                <div className="obrasForm__thumbnail-container" key={img._id}>
+                  <span>{img.originalName}</span>
+                  <Image className="obrasForm__thumbnail" src={`http://localhost:5000/obras/images/${img.path}`} alt="interior" thumbnail />
+                  <Button className="ml-4" variant="outline-danger" onClick={handleSubmit} id="deleteImage" name={img._id} value={img.path}>
+                    X
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p>No se han seleccionado imágenes interiores aún</p>
+            )}
+            <Form.Label htmlFor="images">Seleccione imágenes para agregar:</Form.Label>
+            <Form.File onChange={handleChange} accept="image/*" name="images" multiple />
+          </Form.Group>
 
           {isLoading ? (
             <Spinner animation="grow" />
           ) : (
-            <button type="submit">Submit</button>
+            <div>
+              <Button className="mr-2" size="sm" variant="info" type="submit">
+                Guardar cambios
+              </Button>
+
+              <Button variant="danger" size="sm" name="erase" id="delete" value={obra._id} onClick={handleSubmit}>
+                Eliminar obra
+              </Button>
+            </div>
           )}
-          {feedback ? <div>{feedback}</div> : null}
-        </form>
-      ) : null}
-      {/* <div style={{ border: "1px solid black", margin: "1em", padding: "1em" }}>
-        {imagesList}
-      </div> */}
+          {feedback && <div>{feedback}</div>}
+        </Form>
+      )}
+      {success && <div>{feedback}</div>}
     </div>
   );
 };

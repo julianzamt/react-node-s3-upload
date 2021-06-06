@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import noimage from "../images/noimage.svg";
 import "./Cover.css";
 
 const Cover = ({ path, title, id }) => {
@@ -6,11 +7,11 @@ const Cover = ({ path, title, id }) => {
     <div className="cover__container">
       <div className="cover__text">{title}</div>
       <Link to={`/obras/${id}`}>
-        <img
-          className="cover__image"
-          src={`http://localhost:5000/obras/images/${path}`}
-          alt={title}
-        />
+        {path ? (
+          <img className="cover__image" src={`http://localhost:5000/obras/images/${path}`} alt={title} />
+        ) : (
+          <embed className="cover__image" src={noimage} alt={title} />
+        )}
       </Link>
     </div>
   );

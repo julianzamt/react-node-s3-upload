@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Image from "../components/Image";
 import axios from "axios";
 
-const Obra = (props) => {
+const Obra = props => {
   const [images, setImages] = useState([]);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
@@ -11,12 +11,9 @@ const Obra = (props) => {
 
   async function fetchData() {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/obras/${props.match.params.id}`
-      );
-      console.log(JSON.stringify(res.data) + " Res data en Obra");
+      const res = await axios.get(`http://localhost:5000/obras/${props.match.params.id}`);
       setImages(
-        res.data.images.map((image) => {
+        res.data.images.map(image => {
           return <Image path={image.path} key={image._id} />;
         })
       );
