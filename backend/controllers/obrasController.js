@@ -150,6 +150,22 @@ module.exports = {
       next(e);
     }
   },
+  deleteById: async function (req, res, next) {
+    const id = req.params.id;
+    try {
+      const record = await obraModel.findById({ _id: id });
+      if (record.cover.length) await deleteFile(record.cover[0].path);
+      if (record.images.length) {
+        record.images.forEach(image => deleteFile(image.path));
+      }
+      const deleteStatus = await obraModel.deleteOne({ _id: id });
+      res.status(200).json(deleteStatus);
+    } catch (e) {
+      console.log(e);
+      e.status = 400;
+      res.json(e);
+    }
+  },
   deleteImageByKey: async function (req, res, next) {
     const key = req.params.key;
     const section = req.query.section;
