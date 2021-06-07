@@ -4,6 +4,7 @@ import { postData, fetchData, deleteImage, updateData, deleteData } from "../ser
 import Form from "react-bootstrap/Form";
 import Image from "react-bootstrap/Image";
 import Button from "react-bootstrap/Button";
+import FormFile from "react-bootstrap/FormFile";
 import { errorMessages } from "../utils/errorMessages";
 import "./ObrasForm.css";
 
@@ -191,9 +192,11 @@ const ObrasForm = () => {
             <Form.Control as="textarea" required name="text" value={text} onChange={handleChange} placeholder="Texto interior" />
           </Form.Group>
           <Form.Group>
-            <Form.Label htmlFor="cover">Imagen de portada: </Form.Label>
+            <FormFile.Label htmlFor="cover">Imagen de portada: </FormFile.Label>
             <Form.File onChange={handleChange} accept="image/*" name="cover" />
-            <Form.Label htmlFor="images">Imágenes interiores: </Form.Label>
+          </Form.Group>
+          <Form.Group>
+            <FormFile.Label htmlFor="images">Imágenes interiores: </FormFile.Label>
             <Form.File onChange={handleChange} accept="image/*" name="images" multiple />
           </Form.Group>
 

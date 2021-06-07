@@ -32,8 +32,28 @@ module.exports = {
   create: async function (req, res, next) {
     const cover = req.files["cover"][0];
     const images = req.files["images"];
-    let coverArrayForMongo = [];
-    let imagesArrayForMongo = [];
+
+    //upload images to s3, then erase from server
+    try {
+      if (cover) {
+        await uploadFile(cover);
+        await unlinkFile(cover.path);
+      }
+      if (images) {
+        for (let image of images) {
+          await uploadFile(image);
+          await unlinkFile(image.path);
+        }
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({ error: "Couldn´t upload to s3." });
+    }
+
+    // If success, insert mongo record
+    let coverArrayForMongo,
+      imagesArrayForMongo = [];
+
     if (cover) {
       coverArrayForMongo = [
         {
@@ -43,16 +63,13 @@ module.exports = {
       ];
     }
     if (images) {
-      for (let image of images) {
-        const imageForMongo = {
+      imagesArrayForMongo = images.map(image => {
+        return {
           path: image.filename,
           originalName: image.originalname,
         };
-        imagesArrayForMongo.push(imageForMongo);
-      }
+      });
     }
-
-    let newObraId = ""; // For storing id to delete if something goes wrong in s3 upload
 
     const document = new obraModel({
       title: req.body.title,
@@ -65,41 +82,23 @@ module.exports = {
 
     try {
       const newObra = await document.save();
-
-      newObraId = newObra._id;
-
-      //upload images to s3, then erase from server
-      if (cover) {
-        await uploadFile(cover);
-        await unlinkFile(cover.path);
-      }
-      if (images) {
-        for (let image of images) {
-          await uploadFile(image);
-          await unlinkFile(image.path);
-        }
-      }
-
       res.status(200).json(newObra);
     } catch (e) {
+      console.log(e);
       try {
-        // erase document
-        await obraModel.deleteOne({ _id: newObraId });
-        // erase uploaded files
+        if (cover) {
+          await deleteFile(cover.filename);
+        }
         if (images) {
           for (image of images) {
             await deleteFile(image.filename);
           }
         }
-        if (cover) {
-          await deleteFile(cover.filename);
-        }
       } catch (e) {
         console.log(e);
+        return res.status(500).send({ error: "Couldn´t delete files from s3 - Record not saved on Mongo." });
       }
-      e.status = 400;
-      res.send(e);
-      console.log(e.message + " (Error en image/ post create)");
+      return res.status(500).send({ error: "Couldn´t save record in DB." });
     }
   },
   update: async function (req, res, next) {
