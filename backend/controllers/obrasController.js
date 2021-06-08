@@ -10,8 +10,8 @@ module.exports = {
       const obras = await obraModel.find();
       res.status(200).json(obras);
     } catch (e) {
-      e.status = 400;
-      console.log(e.message);
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t access to DB." });
     }
   },
   getById: async function (req, res, next) {
@@ -19,18 +19,22 @@ module.exports = {
       const obra = await obraModel.findById(req.params.id);
       res.status(200).json(obra);
     } catch (e) {
-      e.status = 400;
-      console.log(e.message);
-      res.status(400).send(e);
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t access to DB." });
     }
   },
   getImageByKey: (req, res) => {
-    const key = req.params.key;
-    const readStream = getFileStream(key);
-    readStream.pipe(res);
+    try {
+      const key = req.params.key;
+      const readStream = getFileStream(key);
+      readStream.pipe(res);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t access to s3." });
+    }
   },
   create: async function (req, res, next) {
-    const cover = req.files["cover"][0];
+    const cover = req.files["cover"] ? req.files["cover"][0] : null;
     const images = req.files["images"];
 
     //upload images to s3, then erase from server
@@ -47,7 +51,7 @@ module.exports = {
       }
     } catch (e) {
       console.log(e);
-      return res.status(500).send({ error: "Couldn´t upload to s3." });
+      return res.status(500).send({ error: true, message: "Couldn´t upload to s3." });
     }
 
     // If success, insert mongo record
@@ -96,42 +100,25 @@ module.exports = {
         }
       } catch (e) {
         console.log(e);
-        return res.status(500).send({ error: "Couldn´t delete files from s3 - Record not saved on Mongo." });
+        return res.status(500).send({ error: true, message: "Couldn´t delete files from s3 - Record not saved on Mongo." });
       }
-      return res.status(500).send({ error: "Couldn´t save record in DB." });
+      return res.status(500).send({ error: true, message: "Couldn´t save record in DB." });
     }
   },
   update: async function (req, res, next) {
     const cover = req.files["cover"] ? req.files["cover"][0] : null;
     const images = req.files["images"];
     const id = req.params.id;
+    let dataToBeUpdated = "";
     try {
-      let obra = await obraModel.findById({ _id: id });
+      dataToBeUpdated = await obraModel.findById({ _id: id });
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t access to DB." });
+    }
 
-      if (cover) {
-        const coverForMongo = {
-          path: cover.filename,
-          originalName: cover.originalname,
-        };
-        obra.cover.push(coverForMongo);
-      }
-      if (images) {
-        for (let image of images) {
-          const imageForMongo = {
-            path: image.filename,
-            originalName: image.originalname,
-          };
-          obra.images.push(imageForMongo);
-        }
-      }
-
-      obra.title = req.body.title;
-      obra.subtitle = req.body.subtitle;
-      obra.year = req.body.year;
-      obra.text = req.body.text;
-
-      const response = await obraModel.updateOne({ _id: req.params.id }, obra);
-      console.log(response);
+    //Save new images to S3
+    try {
       if (cover) {
         await uploadFile(cover);
         await unlinkFile(cover.path);
@@ -142,11 +129,41 @@ module.exports = {
           await unlinkFile(image.path);
         }
       }
-      let updatedObra = await obraModel.findById({ _id: id });
-      res.status(200).json(updatedObra);
     } catch (e) {
-      e.status = 400;
-      next(e);
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t upload to s3." });
+    }
+
+    // If success, insert mongo record
+    if (cover) {
+      const coverForMongo = {
+        path: cover.filename,
+        originalName: cover.originalname,
+      };
+      dataToBeUpdated.cover.unshift(coverForMongo);
+    }
+    if (images) {
+      for (let image of images) {
+        const imageForMongo = {
+          path: image.filename,
+          originalName: image.originalname,
+        };
+        dataToBeUpdated.images.push(imageForMongo);
+      }
+    }
+
+    dataToBeUpdated.title = req.body.title;
+    dataToBeUpdated.subtitle = req.body.subtitle;
+    dataToBeUpdated.year = req.body.year;
+    dataToBeUpdated.text = req.body.text;
+
+    try {
+      await obraModel.updateOne({ _id: req.params.id }, dataToBeUpdated);
+      let updatedObra = await obraModel.findById({ _id: id });
+      return res.status(200).json(updatedObra);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t update record in DB." });
     }
   },
   deleteById: async function (req, res, next) {

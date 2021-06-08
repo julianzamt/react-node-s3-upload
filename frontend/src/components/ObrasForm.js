@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Spinner from "react-bootstrap/Spinner";
 import { postData, fetchData, deleteImage, updateData, deleteData } from "../services/services";
 import Form from "react-bootstrap/Form";
@@ -23,6 +23,9 @@ const ObrasForm = () => {
   const [imagesToUpload, setImagesToUpload] = useState("");
   const [cover, setCover] = useState("");
   const [coverToUpload, setCoverToUpload] = useState("");
+
+  const coverRef = useRef();
+  const imagesRef = useRef();
 
   async function fetchObras() {
     const res = await fetchData("obras");
@@ -71,12 +74,19 @@ const ObrasForm = () => {
           setIsLoading(false);
           setSuccess(true);
           setForm("");
+          // set to "" uncontrolled file inputs
+          coverRef.current.value = "";
+          imagesRef.current.value = "";
         } else {
+          coverRef.current.value = "";
+          imagesRef.current.value = "";
           setFeedback(errorMessages.ERROR);
           setIsLoading(false);
         }
       } catch (e) {
         console.log(e);
+        coverRef.current.value = "";
+        imagesRef.current.value = "";
         setFeedback(errorMessages.ERROR);
         setIsLoading(false);
       }
@@ -91,12 +101,18 @@ const ObrasForm = () => {
           setCoverToUpload("");
           setFeedback("Obra actualizada con éxito");
           setIsLoading(false);
+          coverRef.current.value = "";
+          imagesRef.current.value = "";
         } else {
           setFeedback(errorMessages.ERROR);
+          coverRef.current.value = "";
+          imagesRef.current.value = "";
           setIsLoading(false);
         }
       } catch (e) {
         console.log(e);
+        coverRef.current.value = "";
+        imagesRef.current.value = "";
         setFeedback(errorMessages.ERROR);
         setIsLoading(false);
       }
@@ -131,11 +147,18 @@ const ObrasForm = () => {
           setSuccess(true);
           setForm("");
           setIsLoading(false);
+          coverRef.current.value = "";
+          imagesRef.current.value = "";
+        } else {
+          console.log(deleteStatus);
+          setFeedback(errorMessages.ERROR);
         }
       } catch (e) {
         console.log(e);
         setFeedback(errorMessages.ERROR);
         setIsLoading(false);
+        coverRef.current.value = "";
+        imagesRef.current.value = "";
       }
     }
   };
@@ -193,11 +216,11 @@ const ObrasForm = () => {
           </Form.Group>
           <Form.Group>
             <FormFile.Label htmlFor="cover">Imagen de portada: </FormFile.Label>
-            <Form.File onChange={handleChange} accept="image/*" name="cover" />
+            <Form.File ref={coverRef} onChange={handleChange} accept="image/*" name="cover" />
           </Form.Group>
           <Form.Group>
             <FormFile.Label htmlFor="images">Imágenes interiores: </FormFile.Label>
-            <Form.File onChange={handleChange} accept="image/*" name="images" multiple />
+            <Form.File ref={imagesRef} onChange={handleChange} accept="image/*" name="images" multiple />
           </Form.Group>
 
           {isLoading ? <Spinner animation="grow" /> : <button type="submit">Crear nueva obra</button>}
@@ -246,7 +269,7 @@ const ObrasForm = () => {
               <p>No se ha seleccionado portada aún</p>
             )}
             <Form.Label htmlFor="cover">Seleccione nueva portada: </Form.Label>
-            <Form.File onChange={handleChange} accept="image/*" name="cover" disabled={cover ? true : false} />
+            <Form.File ref={coverRef} onChange={handleChange} accept="image/*" name="cover" disabled={cover ? true : false} />
           </Form.Group>
           <Form.Group>
             <p>Imágenes interiores actuales:</p>
@@ -264,7 +287,7 @@ const ObrasForm = () => {
               <p>No se han seleccionado imágenes interiores aún</p>
             )}
             <Form.Label htmlFor="images">Seleccione imágenes para agregar:</Form.Label>
-            <Form.File onChange={handleChange} accept="image/*" name="images" multiple />
+            <Form.File ref={imagesRef} onChange={handleChange} accept="image/*" name="images" multiple />
           </Form.Group>
 
           {isLoading ? (
