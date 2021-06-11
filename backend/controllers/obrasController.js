@@ -185,27 +185,30 @@ module.exports = {
   deleteImageByKey: async function (req, res, next) {
     const key = req.params.key;
     const section = req.query.section;
-    const modelId = req.query.modelId;
+    const documentId = req.query.documentId;
     const imageId = req.query.imageId;
     const coverFlag = req.query.coverFlag;
-    let record = {};
-    let recordModified = {};
+    let document = {};
     try {
-      if (section === "obras") {
-        record = await obraModel.findById({ _id: modelId });
-      }
-      if (coverFlag === "true") {
-        await record.cover.id(imageId).remove();
-      } else {
-        await record.images.id(imageId).remove();
-      }
       await deleteFile(key);
-      recordModified = await record.save();
-      res.status(200).json(recordModified);
     } catch (e) {
       console.log(e);
-      e.status = 400;
-      res.json(e);
+      return res.status(500).send({ error: true, message: "Couldn´t delete record from s3." });
+    }
+    try {
+      if (section === "obras") {
+        document = await obraModel.findById({ _id: documentId });
+      }
+      if (coverFlag === "true") {
+        await document.cover.id(imageId).remove();
+      } else {
+        await document.images.id(imageId).remove();
+      }
+      const updatedDocument = await document.save();
+      res.status(200).json(updatedDocument);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t update document in DB." });
     }
   },
 };

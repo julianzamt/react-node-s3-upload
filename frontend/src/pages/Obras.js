@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchData } from "../services/services";
+import { fetchCollection } from "../services/services";
 import "./Obras.css";
 import Cover from "../components/Cover";
 
@@ -8,7 +8,7 @@ const Obras = () => {
 
   async function fetchCovers() {
     try {
-      const obras = await fetchData("obras");
+      const obras = await fetchCollection("obras");
       setCovers(
         obras.data.map(obra => {
           if (obra.cover[0]) {

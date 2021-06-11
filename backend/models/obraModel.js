@@ -5,9 +5,15 @@ const ImageSchema = new mongoose.Schema({
   path: {
     type: String,
     required: [true, errorMessages.GENERAL.required],
+    unique: true,
   },
   originalName: {
     type: String,
+    required: [true, errorMessages.GENERAL.required],
+  },
+  order: {
+    type: Number,
+    default: 0,
     required: [true, errorMessages.GENERAL.required],
   },
 });
