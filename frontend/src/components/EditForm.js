@@ -7,6 +7,7 @@ import { updateDocument, deleteDocument, fetchCollection } from "../services/ser
 import { errorMessages } from "../utils/errorMessages";
 import CoverPreview from "../components/CoverPreview";
 import ImagePreview from "../components/ImagePreview";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const EditForm = ({ setFeedback, section, setFormType }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -94,6 +95,17 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
     }
   };
 
+  const handleOnDragEnd = result => {
+    if (!result.destination) return;
+    let items = Array.from(images);
+    console.log(JSON.stringify(items) + "items!");
+    const reorderedItem = items.splice(result.source.index, 1);
+    console.log(JSON.stringify(reorderedItem) + "reorderedItem!");
+    items.splice(result.destination.index, 0, reorderedItem);
+    console.log(JSON.stringify(items) + "items!");
+    setImages(items);
+  };
+
   const handleChange = event => {
     const name = event.target.name;
     if (name === "images") {
@@ -155,13 +167,28 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
           </Form.Group>
           <Form.Group>
             <p>Imágenes interiores actuales:</p>
-            {images.length ? (
-              images.map(img => (
-                <ImagePreview key={img._id} img={img} setDocument={setDocument} setFeedback={setFeedback} document={document} section={section} />
-              ))
-            ) : (
-              <p>No se han seleccionado imágenes interiores aún</p>
-            )}
+            <DragDropContext onDragEnd={handleOnDragEnd}>
+              <Droppable droppableId="imagesPreview">
+                {provided => (
+                  <ul {...provided.droppableProps} ref={provided.innerRef}>
+                    {images.length ? (
+                      images.map((img, index) => (
+                        <Draggable key={img._id} draggableId={img._id} index={index}>
+                          {provided => (
+                            <li {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                              <ImagePreview img={img} setDocument={setDocument} setFeedback={setFeedback} document={document} section={section} />
+                            </li>
+                          )}
+                        </Draggable>
+                      ))
+                    ) : (
+                      <p>No se han seleccionado imágenes interiores aún</p>
+                    )}
+                    {provided.placeholder}
+                  </ul>
+                )}
+              </Droppable>
+            </DragDropContext>
             <Form.Label htmlFor="images">Seleccione imágenes para agregar:</Form.Label>
             <FormFile ref={imagesRef} onChange={handleChange} accept="image/*" name="images" multiple />
           </Form.Group>

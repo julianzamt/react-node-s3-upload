@@ -28,8 +28,8 @@ const Admin = () => {
           <option value="">---</option>
           <option value="obras">Obras</option>
           <option value="proyectos">Proyectos</option>
-          <option value="equipamiento">Equipamiento</option>
-          <option value="producto">Producto</option>
+          <option value="equipamientos">Equipamientos</option>
+          <option value="productos">Producto</option>
           <option value="documentacion">Documentación</option>
           <option value="nosotras">Nosotras</option>
         </Form.Control>
