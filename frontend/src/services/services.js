@@ -41,7 +41,7 @@ function updateImages({ imagesToUpload, documentId, section }) {
     formData.append("images", image);
   }
 
-  return axios.put(`http://localhost:5000/${section}/${documentId}`, formData, {
+  return axios.put(`http://localhost:5000/${section}/${documentId}/update-images`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 }

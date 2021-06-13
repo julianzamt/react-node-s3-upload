@@ -185,9 +185,9 @@ module.exports = {
     if (req.params.id === "undefined") {
       return res.status(400).send({ error: true, message: "document id is undefined" });
     } else if (req.files === undefined) {
-      return res.status(400).send({ error: true, message: "Images not defined." });
+      return res.status(400).send({ error: true, message: "Images is empty." });
     }
-    const images = req.files["images"];
+    const images = req.files;
     const documentId = req.params.id;
     let documentToBeUpdated = "";
     try {
@@ -217,70 +217,6 @@ module.exports = {
     try {
       await obraModel.updateOne({ _id: documentId }, documentToBeUpdated);
       let updatedObra = await obraModel.findById({ _id: documentId });
-      return res.status(200).json(updatedObra);
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send({ error: true, message: "Couldn´t update record in DB." });
-    }
-  },
-  update: async function (req, res, next) {
-    if (req.params.id === "undefined") {
-      return res.status(400).send({ error: true, message: "document id is undefined" });
-    }
-    const cover = req.files["cover"] ? req.files["cover"][0] : null;
-    const images = req.files["images"];
-    const id = req.params.id;
-    let dataToBeUpdated = "";
-    try {
-      dataToBeUpdated = await obraModel.findById({ _id: id });
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send({ error: true, message: "Couldn´t access to DB." });
-    }
-
-    //Save new images to S3
-    try {
-      if (cover) {
-        await uploadFile(cover);
-        await unlinkFile(cover.path);
-      }
-      if (images) {
-        for (let image of images) {
-          await uploadFile(image);
-          await unlinkFile(image.path);
-        }
-      }
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send({ error: true, message: "Couldn´t upload to s3." });
-    }
-
-    // If success, insert mongo record
-    if (cover) {
-      const coverForMongo = {
-        path: cover.filename,
-        originalName: cover.originalname,
-      };
-      dataToBeUpdated.cover.unshift(coverForMongo);
-    }
-    if (images) {
-      for (let image of images) {
-        const imageForMongo = {
-          path: image.filename,
-          originalName: image.originalname,
-        };
-        dataToBeUpdated.images.push(imageForMongo);
-      }
-    }
-
-    dataToBeUpdated.title = req.body.title;
-    dataToBeUpdated.subtitle = req.body.subtitle;
-    dataToBeUpdated.year = req.body.year;
-    dataToBeUpdated.text = req.body.text;
-
-    try {
-      await obraModel.updateOne({ _id: req.params.id }, dataToBeUpdated);
-      let updatedObra = await obraModel.findById({ _id: id });
       return res.status(200).json(updatedObra);
     } catch (e) {
       console.log(e);

@@ -23,9 +23,8 @@ router.get("/images/:key", getImageByKey);
 router.post("/", upload.fields([{ name: "images" }, { name: "cover", maxCount: 1 }]), create);
 router.delete("/images/:key", deleteImageByKey);
 router.delete("/:id", deleteById);
-router.put("/:id", upload.fields([{ name: "images" }, { name: "cover", maxCount: 1 }]), update);
 router.put("/:id/update-cover", upload.single("cover"), updateCover);
 router.put("/:id/update-text", updateText);
-router.put("/:id", upload.array("images"), updateImages);
+router.put("/:id/update-images", upload.array("images"), updateImages);
 
 module.exports = router;
