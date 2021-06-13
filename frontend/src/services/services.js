@@ -24,6 +24,10 @@ function updateCover({ coverToUpload, section, documentId }) {
   });
 }
 
+function updateOrder({ images, documentId, section }) {
+  return axios.put(`http://localhost:5000/${section}/${documentId}/update-order`, images);
+}
+
 function updateText({ title, subtitle, year, text, documentId, section }) {
   const data = {
     title: title,
@@ -60,4 +64,4 @@ function deleteImage(section, documentId, imageId, key, coverFlag) {
   );
 }
 
-export { fetchCollection, postDocument, deleteImage, deleteDocument, updateCover, updateText, updateImages };
+export { fetchCollection, postDocument, deleteImage, deleteDocument, updateCover, updateText, updateImages, updateOrder };

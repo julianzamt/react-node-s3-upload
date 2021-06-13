@@ -223,6 +223,27 @@ module.exports = {
       return res.status(500).send({ error: true, message: "Couldn´t update record in DB." });
     }
   },
+  updateOrder: async function (req, res, next) {
+    if (req.params.id === "undefined") {
+      return res.status(400).send({ error: true, message: "Document id can´t be undefined" });
+    } else if (!req.body) {
+      console.log("body");
+      return res.status(400).send({ error: true, message: "req.body is undefined" });
+    }
+    const documentId = req.params.id;
+    const newImagesArray = req.body;
+    let documentToBeUpdated = "";
+    try {
+      documentToBeUpdated = await obraModel.findById({ _id: documentId });
+      documentToBeUpdated.images = newImagesArray;
+      await obraModel.updateOne({ _id: documentId }, documentToBeUpdated);
+      let updatedObra = await obraModel.findById({ _id: documentId });
+      return res.status(200).json(updatedObra);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({ error: true, message: "Couldn´t access to DB." });
+    }
+  },
   deleteById: async function (req, res, next) {
     if (req.params.id === "undefined") {
       return res.status(400).send({ error: true, message: "Document id can´t be undefined" });

@@ -3,7 +3,7 @@ import FormFile from "react-bootstrap/FormFile";
 import { useState, useRef, useEffect } from "react";
 import Spinner from "react-bootstrap/Spinner";
 import Button from "react-bootstrap/Button";
-import { deleteDocument, fetchCollection, updateCover, updateText, updateImages } from "../services/services";
+import { deleteDocument, fetchCollection, updateCover, updateText, updateImages, updateOrder } from "../services/services";
 import { errorMessages } from "../utils/errorMessages";
 import CoverPreview from "../components/CoverPreview";
 import ImagePreview from "../components/ImagePreview";
@@ -23,6 +23,7 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
   const [imagesToUpload, setImagesToUpload] = useState("");
   const [cover, setCover] = useState("");
   const [coverToUpload, setCoverToUpload] = useState("");
+  const [disableNewOrderButton, setDisableNewOrderButton] = useState(true);
 
   // Set references to Input Fields for reset
   const coverRef = useRef();
@@ -51,18 +52,17 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
       setImages(document.images);
       setCover(document.cover[0]);
       setDisablePostText(true);
+      setDisableNewOrderButton(true);
     }
   }, [document]);
 
   const handleSubmit = async event => {
     event.preventDefault();
     const action = event.target.name;
-    console.log(action + "action!!");
     setFeedback("");
     setIsLoading(true);
     if (action === "updateCover") {
       const documentId = document._id;
-      console.log("Portada");
       try {
         const updatedDocument = await updateCover({ coverToUpload, section, documentId });
         setDocument(updatedDocument.data);
@@ -106,6 +106,19 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
         setFeedback(errorMessages.ERROR);
         setIsLoading(false);
       }
+    } else if (action === "updateOrder") {
+      const documentId = document._id;
+      try {
+        const updatedDocument = await updateOrder({ images, section, documentId });
+        setDocument(updatedDocument.data);
+        fetchSectionData();
+        setFeedback("Orden guardado con éxito");
+        setIsLoading(false);
+      } catch (e) {
+        console.log(e.message);
+        setFeedback(errorMessages.ERROR);
+        setIsLoading(false);
+      }
     } else if (action === "deleteDocument") {
       const id = event.target.value;
       try {
@@ -126,6 +139,7 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
 
   const handleOnDragEnd = result => {
     if (!result.destination) return;
+    setDisableNewOrderButton(false);
     let items = Array.from(images);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
@@ -196,7 +210,7 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
 
           <Form onSubmit={handleSubmit} name="updateCover">
             <Form.Group>
-              <p>Portada actual: </p>
+              <p>Portada actual (eliminarla primero para poder elegir una nueva): </p>
               {cover ? (
                 <CoverPreview img={cover} setDocument={setDocument} setFeedback={setFeedback} document={document} section={section} />
               ) : (
@@ -215,9 +229,9 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
             </Form.Group>
           </Form>
 
-          <Form onSubmit={handleSubmit} name="updateImages">
+          <Form onSubmit={handleSubmit} name="updateOrder">
             <Form.Group>
-              <p>Imágenes interiores actuales:</p>
+              <p>Imágenes interiores (Arrastrar y soltar para cambiar el orden):</p>
               <DragDropContext onDragEnd={handleOnDragEnd}>
                 <Droppable droppableId="imagesPreview">
                   {provided => (
@@ -240,16 +254,29 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
                   )}
                 </Droppable>
               </DragDropContext>
-              <Form.Label htmlFor="images">Seleccione imágenes para agregar:</Form.Label>
-              <FormFile ref={imagesRef} onChange={handleChange} accept="image/*" name="images" multiple />
+              {isLoading ? (
+                <Spinner animation="grow" />
+              ) : (
+                <Button size="sm" variant="info" type="submit" disabled={disableNewOrderButton}>
+                  Guardar Nuevo Orden
+                </Button>
+              )}
             </Form.Group>
-            {isLoading ? (
-              <Spinner animation="grow" />
-            ) : (
-              <Button size="sm" variant="info" type="submit" disabled={imagesToUpload ? false : true}>
-                Guardar Nuevas Imágenes
-              </Button>
-            )}
+          </Form>
+
+          <Form onSubmit={handleSubmit} name="updateImages">
+            <Form.Group>
+              <Form.Label htmlFor="images">Seleccione Imágenes (Se agregarán al final del orden actual):</Form.Label>
+              <FormFile ref={imagesRef} onChange={handleChange} accept="image/*" name="images" multiple />
+
+              {isLoading ? (
+                <Spinner animation="grow" />
+              ) : (
+                <Button size="sm" variant="info" type="submit" disabled={imagesToUpload ? false : true}>
+                  Guardar Nuevas Imágenes
+                </Button>
+              )}
+            </Form.Group>
           </Form>
 
           <Form>

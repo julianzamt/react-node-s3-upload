@@ -9,7 +9,7 @@ const {
   getById,
   getImageByKey,
   create,
-  update,
+  updateOrder,
   deleteImageByKey,
   deleteById,
   updateCover,
@@ -26,5 +26,6 @@ router.delete("/:id", deleteById);
 router.put("/:id/update-cover", upload.single("cover"), updateCover);
 router.put("/:id/update-text", updateText);
 router.put("/:id/update-images", upload.array("images"), updateImages);
+router.put("/:id/update-order", updateOrder);
 
 module.exports = router;
