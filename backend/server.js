@@ -8,6 +8,7 @@ const equipamientosRouter = require("./routes/equipamientos");
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 app.use("/obras", obrasRouter);
 app.use("/proyectos", proyectosRouter);

@@ -16,6 +16,36 @@ function postDocument({ title, subtitle, year, text, coverToUpload, imagesToUplo
   });
 }
 
+function updateCover({ coverToUpload, section, documentId }) {
+  const formData = new FormData();
+  formData.append("cover", coverToUpload);
+  return axios.put(`http://localhost:5000/${section}/${documentId}/update-cover`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
+
+function updateText({ title, subtitle, year, text, documentId, section }) {
+  const data = {
+    title: title,
+    subtitle: subtitle,
+    year: year,
+    text: text,
+  };
+
+  return axios.put(`http://localhost:5000/${section}/${documentId}/update-text`, data);
+}
+
+function updateImages({ imagesToUpload, documentId, section }) {
+  const formData = new FormData();
+  for (let image of imagesToUpload) {
+    formData.append("images", image);
+  }
+
+  return axios.put(`http://localhost:5000/${section}/${documentId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
+
 function updateDocument({ title, subtitle, year, text, coverToUpload, imagesToUpload, id, section }) {
   const formData = new FormData();
   formData.append("title", title);
@@ -46,4 +76,4 @@ function deleteImage(section, documentId, imageId, key, coverFlag) {
   );
 }
 
-export { fetchCollection, postDocument, deleteImage, updateDocument, deleteDocument };
+export { fetchCollection, postDocument, deleteImage, updateDocument, deleteDocument, updateCover, updateText, updateImages };

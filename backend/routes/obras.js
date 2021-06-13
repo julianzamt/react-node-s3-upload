@@ -4,7 +4,18 @@ const router = express.Router();
 const multer = require("multer");
 const upload = multer({ dest: "./uploads" });
 
-const { getAll, getById, getImageByKey, create, update, deleteImageByKey, deleteById } = require("../controllers/obrasController");
+const {
+  getAll,
+  getById,
+  getImageByKey,
+  create,
+  update,
+  deleteImageByKey,
+  deleteById,
+  updateCover,
+  updateText,
+  updateImages,
+} = require("../controllers/obrasController");
 
 router.get("/", getAll);
 router.get("/:id", getById);
@@ -13,5 +24,8 @@ router.post("/", upload.fields([{ name: "images" }, { name: "cover", maxCount: 1
 router.delete("/images/:key", deleteImageByKey);
 router.delete("/:id", deleteById);
 router.put("/:id", upload.fields([{ name: "images" }, { name: "cover", maxCount: 1 }]), update);
+router.put("/:id/update-cover", upload.single("cover"), updateCover);
+router.put("/:id/update-text", updateText);
+router.put("/:id", upload.array("images"), updateImages);
 
 module.exports = router;
