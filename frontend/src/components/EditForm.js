@@ -3,7 +3,7 @@ import FormFile from "react-bootstrap/FormFile";
 import { useState, useRef, useEffect } from "react";
 import Spinner from "react-bootstrap/Spinner";
 import Button from "react-bootstrap/Button";
-import { updateDocument, deleteDocument, fetchCollection, updateCover, updateText, updateImages } from "../services/services";
+import { deleteDocument, fetchCollection, updateCover, updateText, updateImages } from "../services/services";
 import { errorMessages } from "../utils/errorMessages";
 import CoverPreview from "../components/CoverPreview";
 import ImagePreview from "../components/ImagePreview";
@@ -106,25 +106,6 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
         setFeedback(errorMessages.ERROR);
         setIsLoading(false);
       }
-    } else if (action === "updateDocument") {
-      const id = document._id;
-      try {
-        const updatedDocument = await updateDocument({ title, subtitle, year, text, coverToUpload, imagesToUpload, section, id });
-        setDocument(updatedDocument.data);
-        coverRef.current.value = "";
-        imagesRef.current.value = "";
-        setImagesToUpload("");
-        setCoverToUpload("");
-        fetchSectionData();
-        setFeedback("Entrada actualizada con éxito");
-        setIsLoading(false);
-      } catch (e) {
-        console.log(e.message);
-        coverRef.current.value = "";
-        imagesRef.current.value = "";
-        setFeedback(errorMessages.ERROR);
-        setIsLoading(false);
-      }
     } else if (action === "deleteDocument") {
       const id = event.target.value;
       try {
@@ -139,8 +120,6 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
         console.log(e);
         setFeedback(errorMessages.ERROR);
         setIsLoading(false);
-        coverRef.current.value = "";
-        imagesRef.current.value = "";
       }
     }
   };
@@ -148,17 +127,13 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
   const handleOnDragEnd = result => {
     if (!result.destination) return;
     let items = Array.from(images);
-    console.log(JSON.stringify(items) + "items!");
     const [reorderedItem] = items.splice(result.source.index, 1);
-    console.log(JSON.stringify(reorderedItem) + "reorderedItem!");
     items.splice(result.destination.index, 0, reorderedItem);
-    console.log(JSON.stringify(items) + "items!");
     setImages(items);
   };
 
   const handleChange = event => {
     const name = event.target.name;
-    console.log(disablePostText);
     if (name === "images") {
       setImagesToUpload(event.target.files);
     } else if (name === "cover") {
