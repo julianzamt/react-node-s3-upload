@@ -11,11 +11,6 @@ const ImageSchema = new mongoose.Schema({
     type: String,
     required: [true, errorMessages.GENERAL.required],
   },
-  order: {
-    type: Number,
-    default: 0,
-    required: [true, errorMessages.GENERAL.required],
-  },
 });
 
 const ObraSchema = new mongoose.Schema({

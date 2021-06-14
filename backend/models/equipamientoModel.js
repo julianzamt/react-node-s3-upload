@@ -11,11 +11,6 @@ const ImageSchema = new mongoose.Schema({
     type: String,
     required: [true, errorMessages.GENERAL.required],
   },
-  order: {
-    type: Number,
-    default: 0,
-    required: [true, errorMessages.GENERAL.required],
-  },
 });
 
 const EquipamientoSchema = new mongoose.Schema({
@@ -25,7 +20,7 @@ const EquipamientoSchema = new mongoose.Schema({
     maxlength: [50, errorMessages.GENERAL.maxlength],
     unique: true,
   },
-  subtitle: { type: String, maxlength: [280, errorMessages.GENERAL.maxlength] },
+  subtitle: { type: String, maxlength: [650, errorMessages.GENERAL.maxlength] },
   text: { type: String, maxlength: [50, errorMessages.GENERAL.maxlength] },
   year: { type: Number, required: [true, errorMessages.GENERAL.required] },
   cover: [ImageSchema],
