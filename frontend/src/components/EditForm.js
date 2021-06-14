@@ -8,6 +8,7 @@ import { errorMessages } from "../utils/errorMessages";
 import CoverPreview from "../components/CoverPreview";
 import ImagePreview from "../components/ImagePreview";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import Modal from "react-bootstrap/Modal";
 import "./EditForm.css";
 
 const EditForm = ({ setFeedback, section, setFormType }) => {
@@ -24,6 +25,7 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
   const [cover, setCover] = useState("");
   const [coverToUpload, setCoverToUpload] = useState("");
   const [disableNewOrderButton, setDisableNewOrderButton] = useState(true);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Set references to Input Fields for reset
   const coverRef = useRef();
@@ -120,12 +122,9 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
         setIsLoading(false);
       }
     } else if (action === "deleteDocument") {
-      const id = event.target.value;
+      const documentId = document._id;
       try {
-        await deleteDocument(section, id);
-        coverRef.current.value = "";
-        imagesRef.current.value = "";
-        fetchSectionData();
+        await deleteDocument({ section, documentId });
         setFeedback("La obra fue borrada con éxito.");
         setIsLoading(false);
         setFormType("");
@@ -170,6 +169,14 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
     if (name === "title" || name === "subtitle" || name === "year" || name === "text") {
       setDisablePostText(false);
     }
+  };
+
+  const handleShow = () => {
+    setShowConfirmation(true);
+  };
+
+  const handleClose = () => {
+    setShowConfirmation(false);
   };
 
   return (
@@ -284,11 +291,25 @@ const EditForm = ({ setFeedback, section, setFormType }) => {
               <Spinner animation="grow" />
             ) : (
               <div>
-                <Button className="mt-2" variant="danger" size="sm" name="deleteDocument" value={document._id} onClick={handleSubmit}>
-                  Eliminar obra
+                <Button className="mt-2" variant="danger" size="sm" onClick={handleShow}>
+                  Eliminar entrada
                 </Button>
               </div>
             )}
+            <Modal show={showConfirmation} onHide={handleClose} centered>
+              <Modal.Header closeButton>
+                <Modal.Title>¡Cuidado!</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>La entrada se eliminará definitivamente.</Modal.Body>
+              <Modal.Footer>
+                <Button variant="danger" onClick={handleSubmit} name="deleteDocument">
+                  Eliminar definitivamente
+                </Button>
+                <Button variant="secondary" onClick={handleClose}>
+                  Volver
+                </Button>
+              </Modal.Footer>
+            </Modal>
           </Form>
         </div>
       )}

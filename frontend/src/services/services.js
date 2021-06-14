@@ -54,8 +54,8 @@ function fetchCollection(section) {
   return axios.get(`http://localhost:5000/${section}`);
 }
 
-function deleteDocument(section, id) {
-  return axios.delete(`http://localhost:5000/${section}/${id}`);
+function deleteDocument({ section, documentId }) {
+  return axios.delete(`http://localhost:5000/${section}/${documentId}`);
 }
 
 function deleteImage(section, documentId, imageId, key, coverFlag) {
