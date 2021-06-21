@@ -12,6 +12,7 @@ const ImagePreview = ({ img, document, setFeedback, setDocument, section }) => {
     setIsLoading(true);
     const key = event.target.value;
     const imageId = event.target.id;
+    console.log(section, +" " + document._id, +" " + imageId, +" " + key);
     try {
       const updatedDocument = await deleteImage(section, document._id, imageId, key);
       setFeedback("Imagen borrada con éxito");

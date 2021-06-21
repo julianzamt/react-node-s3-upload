@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Form from "react-bootstrap/Form";
 import CreateForm from "../components/CreateForm";
+import DocumentacionCreateForm from "../components/DocumentacionCreateForm";
+import DocumentacionEditForm from "../components/DocumentacionEditForm";
 import EditForm from "../components/EditForm";
 import Button from "react-bootstrap/Button";
 import "./Admin.css";
@@ -10,8 +12,20 @@ const Admin = () => {
   const [section, setSection] = useState("");
 
   const handleClick = event => {
+    const formTypeSelection = event.target.id;
+    console.log(formTypeSelection);
+    console.log(section);
     setFeedback("");
-    setFormType(event.target.id);
+    // special cases
+    if (section === "documentacion") {
+      if (formTypeSelection === "createForm") {
+        return setFormType("documentacionCreateForm");
+      } else if (formTypeSelection === "editForm") {
+        return setFormType("documentacionEditForm");
+      }
+    }
+    // regular cases
+    setFormType(formTypeSelection);
   };
 
   const handleChange = event => {
@@ -48,7 +62,9 @@ const Admin = () => {
         </div>
       )}
       {formType === "createForm" && <CreateForm section={section} setFeedback={setFeedback} setFormType={setFormType} />}
+      {formType === "documentacionCreateForm" && <DocumentacionCreateForm section={section} setFeedback={setFeedback} setFormType={setFormType} />}
       {formType === "editForm" && <EditForm setFeedback={setFeedback} section={section} setFormType={setFormType} />}
+      {formType === "documentacionEditForm" && <DocumentacionEditForm setFeedback={setFeedback} section={section} setFormType={setFormType} />}
       {<div>{feedback}</div>}
     </div>
   );

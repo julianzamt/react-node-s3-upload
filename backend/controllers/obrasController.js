@@ -285,9 +285,7 @@ module.exports = {
       return res.status(500).send({ error: true, message: "Couldn´t delete record from s3." });
     }
     try {
-      if (section === "obras") {
-        document = await obraModel.findById({ _id: documentId });
-      }
+      document = await obraModel.findById({ _id: documentId });
       if (coverFlag === "true") {
         await document.cover.id(imageId).remove();
       } else {

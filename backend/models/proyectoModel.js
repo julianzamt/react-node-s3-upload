@@ -1,5 +1,6 @@
 const mongoose = require("../bin/mongodb");
 const errorMessages = require("../utils/errorMessages");
+const { TEXT_LIMIT, TITLE_LIMIT, SUBTITLE_LIMIT } = require("../utils/charLimits");
 
 const ImageSchema = new mongoose.Schema({
   path: {
@@ -17,11 +18,11 @@ const ProyectoSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, errorMessages.GENERAL.required],
-    maxlength: [50, errorMessages.GENERAL.maxlength],
+    maxlength: [TITLE_LIMIT, errorMessages.GENERAL.maxlength],
     unique: true,
   },
-  subtitle: { type: String, maxlength: [280, errorMessages.GENERAL.maxlength] },
-  text: { type: String, maxlength: [50, errorMessages.GENERAL.maxlength] },
+  subtitle: { type: String, maxlength: [SUBTITLE_LIMIT, errorMessages.GENERAL.maxlength] },
+  text: { type: String, maxlength: [TEXT_LIMIT, errorMessages.GENERAL.maxlength] },
   year: { type: Number, required: [true, errorMessages.GENERAL.required] },
   cover: [ImageSchema],
   images: [ImageSchema],
